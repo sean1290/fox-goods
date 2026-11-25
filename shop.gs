@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
- * Fox Learning Center 굿즈샵 — Google Apps Script 백엔드
+ * 폭스패밀리 굿즈샵 — Google Apps Script 백엔드
  *
  * 주문은 이 스크립트가 붙어 있는 Google Sheet의 「주문」 탭에 저장됩니다.
  * 설정 방법은 README.md 를 보세요.
@@ -8,7 +8,7 @@
 /* ── 1. 가게 설정 (여기만 고치면 됩니다) ───────────────────────── */
 
 var SHOP = {
-  name: 'Fox Learning Center 굿즈',
+  name: '폭스패밀리 굿즈샵',
   open: true,                        // false 로 바꾸면 주문 마감
 
   bank: {

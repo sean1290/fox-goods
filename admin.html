@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Fox 굿즈 주문 관리</title>
+<title>폭스패밀리 굿즈샵 관리</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  :root { --bg: #F7F5F3; --card: #fff; --ink: #1F1A17; --muted: #7A6F67; --line: #ECE4DC;
-          --fox: #F26B1D; --fox-soft: #FFEBDD; --ok: #1E8E5A; --ok-soft: #E3F5EC; --warn: #B26A00; --warn-soft: #FFF4DC; --err: #C62828; }
+  :root { --bg: #FFFFFF; --card: #fff; --ink: #111111; --muted: #8A8A8A; --line: #E5E5E5;
+          --fox: #111111; --fox-soft: #F5F5F5; --ok: #1E8E5A; --ok-soft: #E3F5EC; --warn: #B26A00; --warn-soft: #FFF4DC; --err: #C62828; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, "Apple SD Gothic Neo", sans-serif;
          font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
@@ -17,28 +17,28 @@
   header h1 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
   header h1 img { width: 36px; }
   button { font: inherit; cursor: pointer; }
-  .btn { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 12px; font-weight: 600; color: var(--ink); white-space: nowrap; }
-  .btn:hover { border-color: #D8CCC0; }
+  .btn { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 8px 12px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .btn:hover { border-color: #111; }
   .btn.fox { background: var(--fox); border-color: var(--fox); color: #fff; }
-  .btn.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .btn.ok { background: var(--ink); border-color: var(--ink); color: #fff; }
   .btn.sm { padding: 6px 10px; font-size: 13px; }
   .btn:disabled { opacity: .5; cursor: default; }
 
   /* login */
-  .login { max-width: 340px; margin: 12vh auto 0; background: #fff; border-radius: 18px; padding: 28px; text-align: center; border: 1px solid var(--line); }
+  .login { max-width: 340px; margin: 12vh auto 0; background: #fff; border-radius: 6px; padding: 28px; text-align: center; border: 1px solid var(--line); }
   .login img { width: 80px; }
   .login h2 { margin: 6px 0 16px; font-size: 18px; }
-  .login input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px; font: inherit; font-size: 16px; }
+  .login input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 6px; font: inherit; font-size: 16px; }
   .login .btn { width: 100%; margin-top: 10px; padding: 12px; }
   .err { color: var(--err); margin-top: 10px; min-height: 1em; }
 
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
   .stat .k { color: var(--muted); font-size: 12px; font-weight: 600; }
   .stat .v { font-size: 22px; font-weight: 800; margin-top: 2px; }
   .stat .s { color: var(--muted); font-size: 12px; }
 
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-top: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-top: 14px; }
   .card h3 { margin: 0 0 10px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card h3 small { color: var(--muted); font-weight: 500; font-size: 12px; }
   .tally { display: flex; flex-wrap: wrap; gap: 18px; }
@@ -48,18 +48,18 @@
   .tally .cell { border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; font-size: 13px; }
   .tally .cell span { font-weight: 800; color: var(--fox); margin-left: 4px; }
 
-  .banner { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 14px; margin-top: 14px; font-size: 13px; }
+  .banner { background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 10px 14px; margin-top: 14px; font-size: 13px; }
 
   .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 18px 0 10px; }
-  .tabs { display: flex; gap: 4px; background: #EDE7E1; padding: 4px; border-radius: 12px; flex-wrap: wrap; }
-  .tabs button { border: 0; background: none; padding: 7px 12px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+  .tabs { display: flex; gap: 4px; background: #F2F2F2; padding: 4px; border-radius: 6px; flex-wrap: wrap; }
+  .tabs button { border: 0; background: none; padding: 7px 12px; border-radius: 6px; font-weight: 600; color: var(--muted); }
   .tabs button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .tabs .c { font-size: 12px; margin-left: 3px; }
-  .search { flex: 1; min-width: 160px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+  .search { flex: 1; min-width: 160px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
 
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
   th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  th { background: #FBF8F5; font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  th { background: #FAFAFA; font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
   tr:last-child td { border-bottom: 0; }
   tr.cancel td { opacity: .45; }
   tr.cancel td.act { opacity: 1; }
@@ -75,17 +75,17 @@
   .act { white-space: nowrap; }
   .act .btn { margin: 2px 0; }
   .more { position: relative; display: inline-block; }
-  .menu { position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.1); z-index: 5; min-width: 150px; padding: 4px; }
+  .menu { position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.1); z-index: 5; min-width: 150px; padding: 4px; }
   .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 7px; }
-  .menu button:hover { background: #F6F1EC; }
+  .menu button:hover { background: #F5F5F5; }
   .empty { text-align: center; color: var(--muted); padding: 40px 0; }
 
-  dialog { border: 0; border-radius: 16px; padding: 22px; max-width: 440px; width: calc(100% - 32px); }
+  dialog { border: 0; border-radius: 6px; padding: 22px; max-width: 440px; width: calc(100% - 32px); }
   dialog::backdrop { background: rgba(0,0,0,.35); }
   dialog h3 { margin: 0 0 8px; }
-  dialog pre { white-space: pre-wrap; background: #FBF8F5; border-radius: 10px; padding: 12px; font: inherit; font-size: 13px; max-height: 280px; overflow: auto; }
+  dialog pre { white-space: pre-wrap; background: #F5F5F5; border-radius: 6px; padding: 12px; font: inherit; font-size: 13px; max-height: 280px; overflow: auto; }
   dialog .row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 10px; font-weight: 600; z-index: 50; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: 600; z-index: 50; }
   .hidden { display: none !important; }
 
   @media (max-width: 860px) {
@@ -93,7 +93,7 @@
     table, tbody, tr, td { display: block; border: 0; }
     thead { display: none; }
     table { background: none; }
-    tr { background: #fff; border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px; padding: 8px 4px; }
+    tr { background: #fff; border: 1px solid var(--line); border-radius: 6px; margin-bottom: 10px; padding: 8px 4px; }
     td { padding: 4px 12px; border: 0; }
     td[data-l]::before { content: attr(data-l); color: var(--muted); font-size: 12px; display: inline-block; width: 64px; }
     td.act { padding-top: 8px; }
@@ -105,8 +105,7 @@
 
   <!-- 로그인 -->
   <form class="login" id="login">
-    <img src="images/fox.png" alt="">
-    <h2>주문 관리</h2>
+    <h2>폭스패밀리 굿즈샵<br><span style="font-weight:500;color:var(--muted);font-size:14px">주문 관리</span></h2>
     <input type="password" id="pw" placeholder="관리자 비밀번호" autocomplete="current-password">
     <button class="btn fox" type="submit">들어가기</button>
     <div class="err" id="loginErr"></div>
@@ -115,7 +114,7 @@
   <!-- 관리 화면 -->
   <div id="app" class="hidden">
     <header>
-      <h1><img src="images/fox.png" alt="">Fox 굿즈 주문 관리</h1>
+      <h1>폭스패밀리 굿즈샵 <span style="font-weight:500;color:var(--muted)">관리</span></h1>
       <div style="display:flex;gap:8px">
         <button class="btn" id="refresh">새로고침</button>
         <button class="btn" id="logout">로그아웃</button>
