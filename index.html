@@ -16,7 +16,7 @@
          -webkit-font-smoothing: antialiased; line-height: 1.5; letter-spacing: -0.01em; }
   .topbar { border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 10; }
   .topbar .in { max-width: 960px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
+  .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); text-decoration: none; }
   .topbar .sub { font-size: 12px; color: var(--muted); }
   .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 80px; }
   .hero { padding: 36px 0 20px; }
@@ -57,6 +57,10 @@
   .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
   .chip.out { color: #BBB; background: var(--soft); border-color: var(--line); cursor: not-allowed; }
   .chip.out small { display: block; font-size: 10px; line-height: 1; margin-top: 2px; }
+  .swatches { display: flex; gap: 10px; }
+  .swatch { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; position: relative; }
+  .swatch.on { box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--ink); }
+  .colorname { font-weight: 400; color: #444; margin-left: 6px; }
   .group-title { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
 
   table.chart { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; border-top: 1px solid var(--ink); }
@@ -126,7 +130,7 @@
 </head>
 <body>
 <div class="topbar"><div class="in">
-  <div class="logo">폭스패밀리 굿즈샵</div>
+  <a class="logo" href="./">폭스패밀리 굿즈샵</a>
   <div class="sub">Fox Learning Center</div>
 </div></div>
 
@@ -154,6 +158,11 @@
           <p class="pname" id="pname"></p>
           <p class="pprice" id="pprice"></p>
           <p class="desc" id="desc"></p>
+
+          <div id="colorBox" class="hidden">
+            <div class="label"><span>색상 <span class="colorname" id="colorName"></span></span></div>
+            <div class="swatches" id="colors"></div>
+          </div>
 
           <div class="label">사이즈 <button class="linkbtn" id="chartToggle" type="button">사이즈표 보기</button></div>
           <div id="chartBox" class="hidden">
@@ -300,7 +309,13 @@ const PRODUCTS = [
     name: '폭스 맨투맨',
     price: 39000,
     desc: '기모 안감으로 보온성을 높인 부드러운 촉감의 맨투맨입니다. 소매, 밑단, 넥 라인의 적당한 신축성으로 편안하게 입을 수 있어요.',
-    images: ['images/sweatshirt-front.jpg', 'images/sweatshirt-back.jpg'],
+    // 색상이 여러 개면 colors 에 색상별 사진을 넣어요 (첫 번째 색이 기본)
+    colors: [
+      { id: 'gray',  name: '그레이', swatch: '#BDBDBD',
+        images: ['images/sweatshirt-gray-model.jpg', 'images/sweatshirt-gray-back.jpg', 'images/sweatshirt-gray-front.jpg'] },
+      { id: 'black', name: '블랙',   swatch: '#1A1A1A',
+        images: ['images/sweatshirt-black-back.jpg', 'images/sweatshirt-black-front.jpg'] }
+    ],
     sizeGroups: [
       { title: '성인', sizes: ['S', 'M', 'L', 'XL'] }
     ],
@@ -348,7 +363,7 @@ const BANK_LOGOS = { '하나': 'images/bank-hana.png' };
 
 const $ = id => document.getElementById(id);
 const won = n => n.toLocaleString('ko-KR') + '원';
-const state = { product: null, size: null, qty: 1, info: null };
+const state = { product: null, color: null, size: null, qty: 1, info: null };
 
 // 사진이 아직 없을 때 보여줄 그림
 function placeholder(label) {
@@ -372,7 +387,7 @@ function renderGrid() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'pcard' + (state.product === p ? ' on' : '');
     const box = document.createElement('div'); box.className = 'img';
-    box.appendChild(img(p.images[0], p.name));
+    box.appendChild(img(imagesOf(p)[0], p.name));
     b.appendChild(box);
     b.insertAdjacentHTML('beforeend', `<div class="nm"></div><div class="pr">${won(p.price)}</div>`);
     b.querySelector('.nm').textContent = p.name;
@@ -384,15 +399,10 @@ function renderGrid() {
 function selectProduct(p) {
   const first = !state.product;
   state.product = p; state.size = null; state.qty = 1;
+  state.color = p.colors ? p.colors[0] : null;
   renderGrid();
   $('detail').classList.remove('hidden');
-  setMain(0);
-  const th = $('thumbs'); th.innerHTML = '';
-  if (p.images.length > 1) p.images.forEach((src, i) => {
-    const b = document.createElement('button'); b.type = 'button';
-    b.appendChild(img(src, p.name)); b.onclick = () => setMain(i);
-    th.appendChild(b);
-  });
+  renderColors(); renderGallery();
   $('pname').textContent = p.name;
   $('pprice').textContent = won(p.price);
   $('desc').textContent = p.desc || '';
@@ -420,10 +430,42 @@ function renderInfo(p) {
   if (p.care) add('세탁 방법', b => b.appendChild(list(p.care)));
 }
 
+function imagesOf(p, color) { return (color || (p.colors && p.colors[0]) || p).images || []; }
+function fullName() {
+  const p = state.product; if (!p) return '-';
+  return state.color ? `${p.name} (${state.color.name})` : p.name;
+}
+
+function renderColors() {
+  const p = state.product, box = $('colors');
+  $('colorBox').classList.toggle('hidden', !p.colors);
+  box.innerHTML = '';
+  if (!p.colors) return;
+  $('colorName').textContent = state.color.name;
+  p.colors.forEach(c => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.className = 'swatch' + (state.color === c ? ' on' : '');
+    b.style.background = c.swatch; b.title = c.name; b.setAttribute('aria-label', c.name);
+    b.onclick = () => { state.color = c; renderColors(); renderGallery(); update(); };
+    box.appendChild(b);
+  });
+}
+
+function renderGallery() {
+  const p = state.product, list = imagesOf(p, state.color), th = $('thumbs');
+  th.innerHTML = '';
+  if (list.length > 1) list.forEach((src, i) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.appendChild(img(src, p.name)); b.onclick = () => setMain(i);
+    th.appendChild(b);
+  });
+  setMain(0);
+}
+
 function setMain(i) {
-  const p = state.product, m = $('mainImg');
+  const p = state.product, m = $('mainImg'), list = imagesOf(p, state.color);
   m.onerror = () => { m.onerror = null; m.src = placeholder(p.name); };
-  m.src = p.images[i] || placeholder(p.name);
+  m.src = list[i] || placeholder(p.name);
   [...$('thumbs').children].forEach((b, j) => b.classList.toggle('on', i === j));
 }
 
@@ -479,7 +521,7 @@ function phoneOk() { return /^01[016789]\d{7,8}$/.test($('phone').value.replace(
 function update() {
   const p = state.product;
   $('qty').textContent = state.qty;
-  $('sumProduct').textContent = p ? p.name : '-';
+  $('sumProduct').textContent = fullName();
   $('sumSize').textContent = state.size ? `${state.size} / ${state.qty}개` : '사이즈를 골라 주세요';
   $('sumTotal').textContent = won(p ? p.price * state.qty : 0);
   const closed = state.info && state.info.open === false;
@@ -503,7 +545,7 @@ $('form').addEventListener('submit', async e => {
   try {
     const r = await api({
       action: 'order', name: $('name').value.trim(), phone: $('phone').value,
-      productId: p.id, productName: p.name, size: state.size, qty: state.qty, unitPrice: p.price,
+      productId: p.id + (state.color ? '-' + state.color.id : ''), productName: fullName(), size: state.size, qty: state.qty, unitPrice: p.price,
       website: $('website').value
     });
     showDone(r);
@@ -525,7 +567,7 @@ function showDone(r) {
   $('bankHolder').textContent = '예금주 ' + r.bank.holder;
   $('doneTotal').textContent = won(r.total);
   $('doneName').textContent = name;
-  $('doneItem').textContent = `${p.name} · ${state.size} · ${state.qty}개`;
+  $('doneItem').textContent = `${fullName()} · ${state.size} · ${state.qty}개`;
   $('doneId').textContent = '주문번호 ' + r.orderId;
   $('doneEta').textContent = r.eta;
   window.scrollTo({ top: 0, behavior: 'smooth' });
