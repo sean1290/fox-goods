@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fox 굿즈샵</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --bg: #FFFAF5; --card: #FFFFFF; --ink: #1F1A17; --muted: #7A6F67; --line: #EFE4DA;
+    --fox: #F26B1D; --fox-soft: #FFEBDD; --ok: #1E8E5A; --err: #C62828;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+         -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 64px; }
+  header { display: flex; align-items: center; gap: 14px; padding: 28px 0 18px; }
+  header img { width: 64px; height: 64px; object-fit: contain; }
+  header h1 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .notice { background: var(--fox-soft); border-radius: 14px; padding: 12px 16px; font-size: 14px; margin-bottom: 24px; }
+  .notice b { color: var(--fox); }
+  h2 { font-size: 17px; margin: 28px 0 12px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+          background: var(--fox); color: #fff; font-size: 13px; }
+
+  /* products */
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .pcard { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 10px;
+           cursor: pointer; text-align: left; font: inherit; color: inherit; transition: border-color .15s, transform .15s; }
+  .pcard:hover { transform: translateY(-2px); }
+  .pcard.on { border-color: var(--fox); box-shadow: 0 0 0 3px var(--fox-soft); }
+  .pcard .img { aspect-ratio: 1; border-radius: 12px; background: #F6EFE8; overflow: hidden; }
+  .pcard .img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pcard .nm { font-weight: 700; margin: 10px 4px 0; }
+  .pcard .pr { color: var(--fox); font-weight: 700; margin: 0 4px 4px; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+  .gallery .main { aspect-ratio: 1; max-height: 420px; width: 100%; border-radius: 14px; background: #F6EFE8; overflow: hidden; }
+  .gallery .main img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .thumbs { display: flex; gap: 8px; margin-top: 8px; }
+  .thumbs button { width: 64px; height: 64px; padding: 0; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; background: #F6EFE8; cursor: pointer; }
+  .thumbs button.on { border-color: var(--fox); }
+  .thumbs img { width: 100%; height: 100%; object-fit: cover; }
+  .desc { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
+
+  .label { font-weight: 700; font-size: 14px; margin: 18px 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .linkbtn { background: none; border: 0; color: var(--fox); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+  .sizes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-width: 56px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff;
+          font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); }
+  .chip.on { background: var(--fox); border-color: var(--fox); color: #fff; }
+  .group-title { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+
+  table.chart { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  .chart th, .chart td { padding: 7px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+  .chart th { background: #FBF5EF; font-weight: 600; }
+  .chart tr.hl td { background: var(--fox-soft); font-weight: 700; }
+  .chart-wrap { overflow-x: auto; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .qty { display: inline-flex; align-items: center; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .qty button { width: 42px; height: 42px; border: 0; background: #fff; font-size: 20px; cursor: pointer; color: var(--ink); }
+  .qty span { min-width: 40px; text-align: center; font-weight: 700; }
+
+  .field { margin-top: 14px; }
+  .field label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .field input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--line); font: inherit; font-size: 16px; background: #fff; }
+  .field input:focus { outline: none; border-color: var(--fox); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .agree { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--muted); margin-top: 16px; }
+  .agree input { margin-top: 3px; accent-color: var(--fox); width: 18px; height: 18px; flex: none; }
+  .hp { position: absolute; left: -9999px; }
+
+  .summary { background: #FBF5EF; border-radius: 14px; padding: 14px 16px; margin-top: 18px; font-size: 14px; }
+  .summary .row { display: flex; justify-content: space-between; gap: 12px; }
+  .summary .total { font-size: 18px; font-weight: 800; margin-top: 6px; }
+  .summary .total span:last-child { color: var(--fox); }
+  .primary { width: 100%; margin-top: 16px; padding: 16px; border: 0; border-radius: 14px; background: var(--fox); color: #fff;
+             font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+  .primary:disabled { background: #E3D6CB; cursor: not-allowed; }
+  .error { color: var(--err); font-size: 14px; margin-top: 10px; min-height: 1em; }
+
+  /* done */
+  .done { text-align: center; }
+  .done img { width: 110px; }
+  .done h2 { justify-content: center; font-size: 22px; margin: 8px 0 4px; }
+  .done .sub { color: var(--muted); margin: 0 0 18px; }
+  .box { text-align: left; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-top: 12px; font-size: 15px; }
+  .box .t { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .bank { background: var(--fox-soft); border: 0; }
+  .bank .acct { font-size: 20px; font-weight: 800; letter-spacing: .01em; }
+  .copy { margin-top: 10px; padding: 9px 14px; border-radius: 10px; border: 0; background: var(--fox); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  .ghost { margin-top: 18px; background: none; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 18px; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); }
+  .hidden { display: none !important; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px; }
+
+  @media (max-width: 420px) { header h1 { font-size: 20px; } header img { width: 52px; height: 52px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="images/fox.png" alt="">
+    <div>
+      <h1>Fox 굿즈샵</h1>
+      <p>Fox Learning Center 후드티 &amp; 맨투맨</p>
+    </div>
+  </header>
+
+  <div id="notice" class="notice hidden"></div>
+
+  <!-- 주문 화면 -->
+  <main id="shop">
+    <h2><span class="n">1</span>상품을 골라 주세요</h2>
+    <div class="grid" id="grid"></div>
+
+    <section id="detail" class="hidden">
+      <h2><span class="n">2</span>사이즈와 수량</h2>
+      <div class="panel">
+        <div class="gallery">
+          <div class="main"><img id="mainImg" alt=""></div>
+          <div class="thumbs" id="thumbs"></div>
+        </div>
+        <p class="desc" id="desc"></p>
+
+        <div class="label">사이즈 <button class="linkbtn" id="chartToggle" type="button">사이즈표 보기 ▾</button></div>
+        <div id="chartBox" class="hidden">
+          <div class="chart-wrap"><table class="chart" id="chart"></table></div>
+          <div class="chart-note">단위: cm · 재는 방법에 따라 1~3cm 차이가 있을 수 있어요.</div>
+        </div>
+        <div id="sizes"></div>
+
+        <div class="label">수량</div>
+        <div class="qty">
+          <button type="button" id="minus" aria-label="빼기">−</button>
+          <span id="qty">1</span>
+          <button type="button" id="plus" aria-label="더하기">+</button>
+        </div>
+      </div>
+
+      <h2><span class="n">3</span>주문자 정보</h2>
+      <form class="panel" id="form" novalidate>
+        <div class="field">
+          <label for="name">이름</label>
+          <input id="name" autocomplete="name" placeholder="예) 김여우" maxlength="30">
+          <div class="hint">입금하실 때 이 이름으로 보내 주세요.</div>
+        </div>
+        <div class="field">
+          <label for="phone">휴대폰 번호</label>
+          <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="010-1234-5678" maxlength="13">
+          <div class="hint">주문 확인 문자와 도착 알림 문자가 이 번호로 가요. 학생은 부모님 번호를 적어도 좋아요.</div>
+        </div>
+        <input class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label class="agree">
+          <input type="checkbox" id="agree">
+          <span>주문 처리와 안내 문자 발송을 위해 이름과 휴대폰 번호를 모으는 것에 동의해요. (상품 전달 후 삭제)
+            만 14세 미만은 보호자와 함께 주문해 주세요.</span>
+        </label>
+
+        <div class="summary">
+          <div class="row"><span>상품</span><span id="sumProduct">-</span></div>
+          <div class="row"><span>사이즈 / 수량</span><span id="sumSize">-</span></div>
+          <div class="row total"><span>결제 금액</span><span id="sumTotal">0원</span></div>
+        </div>
+
+        <button class="primary" id="submit" type="submit" disabled>주문하기</button>
+        <div class="error" id="error" role="alert"></div>
+      </form>
+    </section>
+  </main>
+
+  <!-- 주문 완료 화면 -->
+  <section id="done" class="done hidden">
+    <img src="images/fox.png" alt="">
+    <h2>주문이 접수되었어요!</h2>
+    <p class="sub" id="doneSub"></p>
+
+    <div class="box bank">
+      <div class="t">아래 계좌로 입금해 주세요</div>
+      <div id="bankName"></div>
+      <div class="acct" id="bankAcct"></div>
+      <div id="bankHolder"></div>
+      <div style="margin-top:8px;font-weight:700">입금 금액: <span id="doneTotal"></span></div>
+      <div class="hint">입금자명: <b id="doneName"></b></div>
+      <button class="copy" id="copyBtn" type="button">계좌번호 복사</button>
+    </div>
+
+    <div class="box">
+      <div class="t">주문 내용</div>
+      <div id="doneItem"></div>
+      <div class="hint" id="doneId"></div>
+    </div>
+
+    <div class="box">
+      <div class="t">언제 받을 수 있나요?</div>
+      <div><b id="doneEta"></b></div>
+      <div class="hint">주문 제작 상품이라 시간이 걸려요. 상품이 도착하면 문자로 알려드릴게요.</div>
+    </div>
+
+    <button class="ghost" id="again" type="button">다른 상품 더 주문하기</button>
+  </section>
+
+  <footer>Fox Learning Center</footer>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+ * 설정 — 여기만 고치면 됩니다
+ * ═══════════════════════════════════════════════════════════════ */
+
+// Apps Script 웹 앱 URL (README 3단계)
+const SCRIPT_URL = '';
+
+// 상품 목록. 이미지는 images/ 폴더에 넣고 파일 이름을 적어 주세요.
+// 사이즈표는 마플 상품 페이지의 실측 사이즈표 값으로 바꿔 주세요. (아래 숫자는 예시)
+const PRODUCTS = [
+  {
+    id: 'hoodie',
+    name: '폭스 후드티',
+    price: 35000,
+    desc: '도톰한 기모 후드티. 앞면 프린트.',
+    images: ['images/hoodie-front.jpg', 'images/hoodie-back.jpg'],
+    sizeGroups: [
+      { title: '아동', sizes: ['110', '120', '130', '140', '150'] },
+      { title: '성인', sizes: ['S', 'M', 'L', 'XL'] }
+    ],
+    chart: {
+      columns: ['사이즈', '총장', '가슴단면', '소매길이', '추천 키'],
+      rows: [
+        ['110', 46, 40, 40, '105~115'],
+        ['120', 50, 43, 44, '115~125'],
+        ['130', 54, 46, 48, '125~135'],
+        ['140', 58, 49, 52, '135~145'],
+        ['150', 62, 52, 56, '145~155'],
+        ['S',   66, 55, 60, '155~165'],
+        ['M',   69, 58, 61, '165~172'],
+        ['L',   72, 61, 62, '172~178'],
+        ['XL',  75, 64, 63, '178~185']
+      ]
+    }
+  },
+  {
+    id: 'sweatshirt',
+    name: '폭스 맨투맨',
+    price: 30000,
+    desc: '편하게 입는 기모 맨투맨. 앞면 프린트.',
+    images: ['images/sweatshirt-front.jpg', 'images/sweatshirt-back.jpg'],
+    sizeGroups: [
+      { title: '아동', sizes: ['110', '120', '130', '140', '150'] },
+      { title: '성인', sizes: ['S', 'M', 'L', 'XL'] }
+    ],
+    chart: {
+      columns: ['사이즈', '총장', '가슴단면', '소매길이', '추천 키'],
+      rows: [
+        ['110', 45, 40, 40, '105~115'],
+        ['120', 49, 43, 44, '115~125'],
+        ['130', 53, 46, 48, '125~135'],
+        ['140', 57, 49, 52, '135~145'],
+        ['150', 61, 52, 56, '145~155'],
+        ['S',   65, 54, 59, '155~165'],
+        ['M',   68, 57, 60, '165~172'],
+        ['L',   71, 60, 61, '172~178'],
+        ['XL',  74, 63, 62, '178~185']
+      ]
+    }
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════════ */
+
+const $ = id => document.getElementById(id);
+const won = n => n.toLocaleString('ko-KR') + '원';
+const state = { product: null, size: null, qty: 1, info: null };
+
+// 사진이 아직 없을 때 보여줄 그림
+function placeholder(label) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F6EFE8"/>
+    <path d="M140 95 L95 120 L60 200 L95 215 L115 180 L115 320 L285 320 L285 180 L305 215 L340 200 L305 120 L260 95 Q200 140 140 95Z"
+      fill="#fff" stroke="#E3D6CB" stroke-width="4" stroke-linejoin="round"/>
+    <text x="200" y="365" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#B5A597">${label}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+function img(src, label) {
+  const el = new Image();
+  el.alt = label; el.loading = 'lazy';
+  el.onerror = () => { el.onerror = null; el.src = placeholder(label); };
+  el.src = src || placeholder(label);
+  return el;
+}
+
+function renderGrid() {
+  const grid = $('grid'); grid.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pcard' + (state.product === p ? ' on' : '');
+    const box = document.createElement('div'); box.className = 'img';
+    box.appendChild(img(p.images[0], p.name));
+    b.appendChild(box);
+    b.insertAdjacentHTML('beforeend', `<div class="nm"></div><div class="pr">${won(p.price)}</div>`);
+    b.querySelector('.nm').textContent = p.name;
+    b.onclick = () => selectProduct(p);
+    grid.appendChild(b);
+  });
+}
+
+function selectProduct(p) {
+  const first = !state.product;
+  state.product = p; state.size = null; state.qty = 1;
+  renderGrid();
+  $('detail').classList.remove('hidden');
+  setMain(0);
+  const th = $('thumbs'); th.innerHTML = '';
+  if (p.images.length > 1) p.images.forEach((src, i) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.appendChild(img(src, p.name)); b.onclick = () => setMain(i);
+    th.appendChild(b);
+  });
+  $('desc').textContent = p.desc || '';
+  renderSizes(); renderChart(); update();
+  if (first || window.innerWidth < 700) $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setMain(i) {
+  const p = state.product, m = $('mainImg');
+  m.onerror = () => { m.onerror = null; m.src = placeholder(p.name); };
+  m.src = p.images[i] || placeholder(p.name);
+  [...$('thumbs').children].forEach((b, j) => b.classList.toggle('on', i === j));
+}
+
+function renderSizes() {
+  const box = $('sizes'); box.innerHTML = '';
+  state.product.sizeGroups.forEach(g => {
+    if (state.product.sizeGroups.length > 1) {
+      const t = document.createElement('div'); t.className = 'group-title'; t.textContent = g.title; box.appendChild(t);
+    }
+    const row = document.createElement('div'); row.className = 'sizes';
+    g.sizes.forEach(s => {
+      const c = document.createElement('button'); c.type = 'button';
+      c.className = 'chip' + (state.size === s ? ' on' : ''); c.textContent = s;
+      c.onclick = () => { state.size = s; renderSizes(); renderChart(); update(); };
+      row.appendChild(c);
+    });
+    box.appendChild(row);
+  });
+}
+
+function renderChart() {
+  const c = state.product.chart, t = $('chart');
+  t.innerHTML = '';
+  const head = t.insertRow();
+  c.columns.forEach(h => { const th = document.createElement('th'); th.textContent = h; head.appendChild(th); });
+  c.rows.forEach(r => {
+    const tr = t.insertRow();
+    if (String(r[0]) === state.size) tr.className = 'hl';
+    r.forEach(v => { tr.insertCell().textContent = v; });
+  });
+}
+
+$('chartToggle').onclick = () => {
+  const open = $('chartBox').classList.toggle('hidden') === false;
+  $('chartToggle').textContent = open ? '사이즈표 닫기 ▴' : '사이즈표 보기 ▾';
+};
+$('minus').onclick = () => { state.qty = Math.max(1, state.qty - 1); update(); };
+$('plus').onclick  = () => { state.qty = Math.min(10, state.qty + 1); update(); };
+
+$('phone').addEventListener('input', e => {
+  const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+  e.target.value = d.length < 4 ? d : d.length < 8 ? `${d.slice(0,3)}-${d.slice(3)}`
+    : `${d.slice(0,3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`;
+  update();
+});
+['name', 'agree'].forEach(id => $(id).addEventListener('input', update));
+
+function phoneOk() { return /^01[016789]\d{7,8}$/.test($('phone').value.replace(/\D/g, '')); }
+
+function update() {
+  const p = state.product;
+  $('qty').textContent = state.qty;
+  $('sumProduct').textContent = p ? p.name : '-';
+  $('sumSize').textContent = state.size ? `${state.size} / ${state.qty}개` : '사이즈를 골라 주세요';
+  $('sumTotal').textContent = won(p ? p.price * state.qty : 0);
+  const closed = state.info && state.info.open === false;
+  $('submit').disabled = closed || !(p && state.size && $('name').value.trim() && phoneOk() && $('agree').checked);
+  $('submit').textContent = closed ? '주문이 마감되었어요' : '주문하기';
+}
+
+async function api(body) {
+  if (!SCRIPT_URL) throw new Error('아직 주문 서버가 연결되지 않았어요. (SCRIPT_URL 설정 필요)');
+  const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.status !== 'ok') throw new Error(data.message || '오류가 생겼어요.');
+  return data;
+}
+
+$('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if ($('submit').disabled) return;
+  const p = state.product, btn = $('submit');
+  btn.disabled = true; btn.textContent = '주문 넣는 중…'; $('error').textContent = '';
+  try {
+    const r = await api({
+      action: 'order', name: $('name').value.trim(), phone: $('phone').value,
+      productId: p.id, productName: p.name, size: state.size, qty: state.qty, unitPrice: p.price,
+      website: $('website').value
+    });
+    showDone(r);
+  } catch (err) {
+    $('error').textContent = err.message === 'Failed to fetch' ? '인터넷 연결을 확인하고 다시 시도해 주세요.' : err.message;
+    update();
+  }
+});
+
+function showDone(r) {
+  const p = state.product, name = $('name').value.trim();
+  $('shop').classList.add('hidden'); $('done').classList.remove('hidden');
+  $('doneSub').textContent = r.smsSent ? '주문 내용과 입금 계좌를 문자로도 보내드렸어요.' : '이 화면을 캡처해 두시면 편해요.';
+  $('bankName').textContent = r.bank.bankName;
+  $('bankAcct').textContent = r.bank.account;
+  $('bankHolder').textContent = '예금주 ' + r.bank.holder;
+  $('doneTotal').textContent = won(r.total);
+  $('doneName').textContent = name;
+  $('doneItem').textContent = `${p.name} · ${state.size} · ${state.qty}개`;
+  $('doneId').textContent = '주문번호 ' + r.orderId;
+  $('doneEta').textContent = r.eta;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('copyBtn').onclick = async () => {
+  const t = $('bankAcct').textContent;
+  try { await navigator.clipboard.writeText(t.replace(/[^\d-]/g, '')); $('copyBtn').textContent = '복사했어요 ✓'; }
+  catch { $('copyBtn').textContent = '길게 눌러 복사해 주세요'; }
+  setTimeout(() => $('copyBtn').textContent = '계좌번호 복사', 2000);
+};
+
+$('again').onclick = () => {
+  state.product = null; state.size = null; state.qty = 1;
+  $('done').classList.add('hidden'); $('shop').classList.remove('hidden'); $('detail').classList.add('hidden');
+  renderGrid(); update(); window.scrollTo({ top: 0 });
+};
+
+async function loadInfo() {
+  if (!SCRIPT_URL) return;
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=info');
+    state.info = await res.json();
+    const parts = [];
+    if (state.info.open === false) parts.push('<b>지금은 주문을 받지 않아요.</b>');
+    else if (state.info.eta) parts.push(`<b>예상 도착:</b> ${esc(state.info.eta)}`);
+    if (state.info.notice) parts.push(esc(state.info.notice));
+    if (parts.length) { $('notice').innerHTML = parts.join('<br>'); $('notice').classList.remove('hidden'); }
+    update();
+  } catch (_) { /* 안내 문구는 없어도 주문은 가능 */ }
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+renderGrid(); update(); loadInfo();
+</script>
+</body>
+</html>
