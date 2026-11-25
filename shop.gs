@@ -46,6 +46,16 @@ function confirmMessage(o) {
     '상품이 도착하면 다시 문자로 알려드릴게요. 감사합니다!';
 }
 
+function paidMessage(o) {
+  return '[' + SHOP.name + '] 입금이 확인되었어요!\n\n' +
+    '주문번호: ' + o.id + '\n' +
+    '상품: ' + o.product + ' (' + o.size + ') ' + o.qty + '개\n' +
+    '금액: ' + won(o.total) + '\n\n' +
+    '이제 제작을 시작해요.\n' +
+    '■ 예상 도착: ' + SHOP.eta + '\n\n' +
+    '상품이 도착하면 다시 문자로 알려드릴게요. 감사합니다!';
+}
+
 function arrivalMessage(o) {
   return '[' + SHOP.name + '] 주문하신 상품이 도착했어요!\n\n' +
     '주문번호: ' + o.id + '\n' +
@@ -59,7 +69,7 @@ function arrivalMessage(o) {
 
 var SHEET_NAME = '주문';
 var HEADERS = ['주문번호', '주문일시', '이름', '연락처', '상품ID', '상품', '사이즈', '수량',
-               '단가', '금액', '입금확인', '주문문자', '도착문자', '도착문자일시', '상태'];
+               '단가', '금액', '입금확인', '주문문자', '도착문자', '도착문자일시', '상태', '입금문자'];
 var COL = {}; HEADERS.forEach(function (h, i) { COL[h] = i; });
 
 /* ── Web app 진입점 ─────────────────────────────────────────── */
@@ -76,7 +86,8 @@ function doPost(e) {
     switch (d.action) {
       case 'order':         return out(placeOrder(d));
       case 'adminList':     auth(d); return out({ status: 'ok', orders: listOrders(), info: publicInfo(), smsReady: smsReady() });
-      case 'setPaid':       auth(d); return out(updateOrder(d.id, function (r) { r[COL['입금확인']] = d.paid ? now() : ''; }));
+      case 'setPaid':       auth(d); return out(setPaid(d.id, d.paid));
+      case 'resendPaid':    auth(d); return out(sendPaidSms(d.id));
       case 'setCancelled':  auth(d); return out(updateOrder(d.id, function (r) { r[COL['상태']] = d.cancelled ? '취소' : ''; }));
       case 'sendArrival':   auth(d); return out(sendArrival(d.id, d.markOnly));
       case 'resendConfirm': auth(d); return out(resendConfirm(d.id));
@@ -161,8 +172,25 @@ function rowToOrder(r) {
     unitPrice: Number(String(r[COL['단가']]).replace(/\D/g, '')), total: Number(String(r[COL['금액']]).replace(/\D/g, '')),
     paid: String(r[COL['입금확인']] || ''), confirmSms: String(r[COL['주문문자']] || ''),
     arrivalSms: String(r[COL['도착문자']] || ''), arrivalAt: String(r[COL['도착문자일시']] || ''),
-    cancelled: r[COL['상태']] === '취소'
+    cancelled: r[COL['상태']] === '취소',
+    paidSms: String(r[COL['입금문자']] || '')
   };
+}
+
+// 입금 확인: 처음 확인할 때 입금 완료 문자를 자동으로 보냄
+function setPaid(id, paid) {
+  var before = findOrder(id);
+  var res = updateOrder(id, function (r) { r[COL['입금확인']] = paid ? now() : ''; });
+  if (paid && !before.paid && !before.paidSms) res.sms = sendPaidSms(id);
+  return res;
+}
+
+function sendPaidSms(id) {
+  var o = findOrder(id);
+  var text = paidMessage(o);
+  var sms = sendSms(o.phone, text);
+  var res = updateOrder(id, function (r) { r[COL['입금문자']] = sms.ok ? '발송 ' + now() : '실패: ' + sms.error; });
+  return { status: 'ok', sent: sms.ok, error: sms.error || '', phone: o.phone, text: text, order: res.order };
 }
 
 function sendArrival(id, markOnly) {
@@ -196,6 +224,7 @@ function updateOrder(id, mutate) {
   for (var i = 1; i < values.length; i++) {
     if (values[i][0] === id) {
       var row = values[i].slice();
+      while (row.length < HEADERS.length) row.push('');
       mutate(row);
       sheet.getRange(i + 1, 1, 1, HEADERS.length).setValues([row.slice(0, HEADERS.length)]);
       return { status: 'ok', order: rowToOrder(sheet.getRange(i + 1, 1, 1, HEADERS.length).getDisplayValues()[0]) };
@@ -257,6 +286,11 @@ function getSheet() {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS])
       .setFontWeight('bold').setBackground('#FFF1E6');
     sheet.setFrozenRows(1);
+  } else if (sheet.getLastColumn() < HEADERS.length) {
+    // 예전 버전 시트에 새 칸(입금문자) 추가
+    var n = HEADERS.length;
+    sheet.getRange(1, 1, sheet.getMaxRows(), n).setNumberFormat('@');
+    sheet.getRange(1, 1, 1, n).setValues([HEADERS]).setFontWeight('bold').setBackground('#FFF1E6');
   }
   return sheet;
 }

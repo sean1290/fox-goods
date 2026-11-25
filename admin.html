@@ -241,7 +241,8 @@ function render() {
       <td data-l="입금">${o.cancelled ? '<span class="tag cx">취소</span>' : isPaid(o)
           ? `<span class="tag paid">입금 완료</span><div class="dt">${esc(o.paid)}</div>` : '<span class="tag wait">입금 대기</span>'}</td>
       <td data-l="문자">
-        <div class="sub">주문: ${o.confirmSms.startsWith('발송') ? '보냄' : o.confirmSms ? '<span style="color:var(--err)">못 보냄</span>' : '-'}</div>
+        <div class="sub">주문: ${smsState(o.confirmSms)}</div>
+        <div class="sub">입금: ${smsState(o.paidSms)}</div>
         <div class="sub">도착: ${isSent(o) ? `<span class="tag sent">보냄</span> ${esc(o.arrivalAt)}` : '-'}</div>
       </td>
       <td class="act" style="text-align:right">
@@ -252,13 +253,15 @@ function render() {
     </tr>`).join('');
 }
 
+function smsState(v) { return !v ? '-' : v.startsWith('발송') ? '보냄' : '<span style="color:var(--err)">못 보냄</span>'; }
+
 function sizeKey(s) { const n = parseInt(s, 10); return isNaN(n) ? 1000 + ['XS','S','M','L','XL','2XL','XXL','3XL'].indexOf(s) : n; }
 
 $('rows').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const id = b.closest('tr').dataset.id, o = orders.find(x => x.id === id);
   const a = b.dataset.a;
-  if (a === 'paid') return act(b, { action: 'setPaid', id, paid: true }, '입금 확인했어요');
+  if (a === 'paid') return markPaid(b, o);
   if (a === 'arrive') {
     if (isSent(o) && !confirm(`${o.name}님께 도착 문자를 이미 보냈어요. 다시 보낼까요?`)) return;
     if (!isSent(o) && !isPaid(o) && !confirm('아직 입금 확인이 안 된 주문이에요. 그래도 도착 문자를 보낼까요?')) return;
@@ -267,6 +270,7 @@ $('rows').addEventListener('click', async e => {
   if (a === 'more') return openMenu(b, o);
   if (a === 'unpaid') return act(b, { action: 'setPaid', id, paid: false }, '입금 확인을 취소했어요');
   if (a === 'resend') return sendMsg(b, { action: 'resendConfirm', id }, '주문 문자');
+  if (a === 'resendPaid') return sendMsg(b, { action: 'resendPaid', id }, '입금 완료 문자');
   if (a === 'cancel' && confirm(`${o.id} (${o.name}) 주문을 취소 처리할까요?`)) return act(b, { action: 'setCancelled', id, cancelled: true }, '취소 처리했어요');
   if (a === 'uncancel') return act(b, { action: 'setCancelled', id, cancelled: false }, '취소를 되돌렸어요');
 });
@@ -275,13 +279,24 @@ function openMenu(btn, o) {
   closeMenu();
   const m = document.createElement('div'); m.className = 'menu';
   m.innerHTML = (o.cancelled ? '<button data-a="uncancel">취소 되돌리기</button>' : `
-    ${isPaid(o) ? '<button data-a="unpaid">입금 확인 취소</button>' : ''}
+    ${isPaid(o) ? '<button data-a="resendPaid">입금 완료 문자 다시 보내기</button><button data-a="unpaid">입금 확인 취소</button>' : ''}
     <button data-a="resend">주문 문자 다시 보내기</button>
     <button data-a="cancel" style="color:var(--err)">주문 취소</button>`);
   btn.parentElement.appendChild(m);
   setTimeout(() => document.addEventListener('click', closeMenu, { once: true }));
 }
 function closeMenu() { document.querySelectorAll('.menu').forEach(m => m.remove()); }
+
+async function markPaid(btn, o) {
+  btn.disabled = true; btn.textContent = '처리 중…';
+  try {
+    const r = await api({ action: 'setPaid', id: o.id, paid: true });
+    replace(r.order);
+    if (!r.sms) toast('입금 확인했어요');
+    else if (r.sms.sent) { await load(); toast(`입금 확인 · ${o.name}님께 입금 완료 문자를 보냈어요`); }
+    else { await load(); showManual(r.sms, o, false); }
+  } catch (err) { toast(err.message); render(); }
+}
 
 async function act(btn, body, msg) {
   btn.disabled = true;
