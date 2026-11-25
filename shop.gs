@@ -243,9 +243,13 @@ function smsReady() {
 
 function sendSms(to, text) {
   var p = PropertiesService.getScriptProperties();
-  var key = p.getProperty('SOLAPI_API_KEY'), secret = p.getProperty('SOLAPI_API_SECRET'),
+  var key = String(p.getProperty('SOLAPI_API_KEY') || '').trim(),
+      secret = String(p.getProperty('SOLAPI_API_SECRET') || '').trim(),
       from = String(p.getProperty('SENDER_PHONE') || '').replace(/\D/g, '');
-  if (!key || !secret || !from) return { ok: false, error: '문자 설정 안 됨' };
+  if (!key || !secret || !from) {
+    var miss = [!key && 'SOLAPI_API_KEY', !secret && 'SOLAPI_API_SECRET', !from && 'SENDER_PHONE'].filter(Boolean);
+    return { ok: false, error: '문자 설정 안 됨 (스크립트 속성 없음: ' + miss.join(', ') + ')' };
+  }
 
   var date = new Date().toISOString();
   var salt = Utilities.getUuid().replace(/-/g, '');
@@ -257,13 +261,14 @@ function sendSms(to, text) {
       method: 'post',
       contentType: 'application/json',
       headers: { Authorization: 'HMAC-SHA256 apiKey=' + key + ', date=' + date + ', salt=' + salt + ', signature=' + sig },
-      payload: JSON.stringify({ message: { to: String(to).replace(/\D/g, ''), from: from, text: text, subject: SHOP.name } }),
+      payload: JSON.stringify({ message: { to: String(to).replace(/\D/g, ''), from: from, text: text } }),
       muteHttpExceptions: true
     });
     var code = res.getResponseCode();
     if (code >= 200 && code < 300) return { ok: true };
     var body = {}; try { body = JSON.parse(res.getContentText()); } catch (e) {}
-    return { ok: false, error: (body.errorMessage || body.statusMessage || ('HTTP ' + code)) };
+    Logger.log('SOLAPI 오류 ' + code + ': ' + res.getContentText());
+    return { ok: false, error: (body.errorCode ? body.errorCode + ' ' : '') + (body.errorMessage || body.statusMessage || ('HTTP ' + code)) };
   } catch (err) {
     return { ok: false, error: String(err.message || err) };
   }
@@ -272,7 +277,8 @@ function sendSms(to, text) {
 // Apps Script 편집기에서 실행해 보는 테스트: 내 번호로 문자 한 통 보내기
 function testSms() {
   var me = PropertiesService.getScriptProperties().getProperty('SENDER_PHONE');
-  Logger.log(JSON.stringify(sendSms(me, '[' + SHOP.name + '] 문자 발송 테스트입니다.')));
+  var r = sendSms(me, '[' + SHOP.name + '] 문자 발송 테스트입니다.');
+  Logger.log(r.ok ? '✅ 성공: ' + me + ' 번호로 테스트 문자를 보냈어요.' : '❌ 실패: ' + r.error);
 }
 
 /* ── 공통 ───────────────────────────────────────────────────── */

@@ -253,7 +253,11 @@ function render() {
     </tr>`).join('');
 }
 
-function smsState(v) { return !v ? '-' : v.startsWith('발송') ? '보냄' : '<span style="color:var(--err)">못 보냄</span>'; }
+function smsState(v) {
+  if (!v) return '-';
+  if (v.startsWith('발송')) return '보냄';
+  return `<span style="color:var(--err)">못 보냄</span><div style="color:var(--err);font-size:11px;max-width:220px;white-space:normal">${esc(v.replace(/^실패:\s*/, ''))}</div>`;
+}
 
 function sizeKey(s) { const n = parseInt(s, 10); return isNaN(n) ? 1000 + ['XS','S','M','L','XL','2XL','XXL','3XL'].indexOf(s) : n; }
 
