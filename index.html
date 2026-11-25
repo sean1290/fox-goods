@@ -55,6 +55,8 @@
           font: inherit; font-size: 13px; cursor: pointer; color: var(--ink); }
   .chip:hover { border-color: var(--ink); }
   .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chip.out { color: #BBB; background: var(--soft); border-color: var(--line); cursor: not-allowed; }
+  .chip.out small { display: block; font-size: 10px; line-height: 1; margin-top: 2px; }
   .group-title { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
 
   table.chart { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; border-top: 1px solid var(--ink); }
@@ -250,18 +252,20 @@ const PRODUCTS = [
   {
     id: 'hoodie',
     name: '폭스 후드티',
-    price: 35000,
+    price: 44000,
     desc: '기모 안감으로 보온성을 높인 부드러운 촉감의 후드티입니다. 소매, 밑단, 넥 라인의 적당한 신축성으로 편안하게 입을 수 있어요.',
     images: ['images/hoodie-front.jpg', 'images/hoodie-back.jpg'],
     sizeGroups: [
-      { title: '성인', sizes: ['S', 'M', 'L'] }
+      { title: '성인', sizes: ['S', 'M', 'L', 'XL'] }
     ],
+    soldOut: ['XL'],   // 임시품절 사이즈. 다시 팔 때는 [] 로
     chart: {
       columns: ['사이즈', '총기장', '어깨너비', '가슴단면', '소매길이'],
       rows: [
-        ['S', 52, 43, 43, 44],
-        ['M', 55, 45, 45, 48],
-        ['L', 58, 49, 48, 52]
+        ['S',  52, 43, 43, 44],
+        ['M',  55, 45, 45, 48],
+        ['L',  58, 49, 48, 52],
+        ['XL', 62, 52, 52, 56]
       ]
     },
     sizeTip: 'USA핏(루즈핏)이라 소매가 길고 어깨가 넓은 편이에요. 국내 사이즈보다 한 치수 크게 나와요.',
@@ -293,7 +297,7 @@ const PRODUCTS = [
   {
     id: 'sweatshirt',
     name: '폭스 맨투맨',
-    price: 30000,
+    price: 39000,
     desc: '기모 안감으로 보온성을 높인 부드러운 촉감의 맨투맨입니다. 소매, 밑단, 넥 라인의 적당한 신축성으로 편안하게 입을 수 있어요.',
     images: ['images/sweatshirt-front.jpg', 'images/sweatshirt-back.jpg'],
     sizeGroups: [
@@ -428,8 +432,11 @@ function renderSizes() {
     const row = document.createElement('div'); row.className = 'sizes';
     g.sizes.forEach(s => {
       const c = document.createElement('button'); c.type = 'button';
-      c.className = 'chip' + (state.size === s ? ' on' : ''); c.textContent = s;
-      c.onclick = () => { state.size = s; renderSizes(); renderChart(); update(); };
+      const out = (state.product.soldOut || []).includes(s);
+      c.className = 'chip' + (state.size === s ? ' on' : '') + (out ? ' out' : '');
+      c.textContent = s;
+      if (out) { c.disabled = true; c.title = '임시품절'; c.insertAdjacentHTML('beforeend', '<small>품절</small>'); }
+      else c.onclick = () => { state.size = s; renderSizes(); renderChart(); update(); };
       row.appendChild(c);
     });
     box.appendChild(row);
