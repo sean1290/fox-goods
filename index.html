@@ -109,6 +109,7 @@
   .box { border-top: 1px solid var(--line); padding: 18px 0; font-size: 14px; }
   .box .t { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
   .bank { border-top: 1px solid var(--ink); }
+  .banklogo { height: 30px; width: auto; display: block; margin: 4px 0 6px; }
   .bank .acct { font-size: 22px; font-weight: 800; letter-spacing: 0; margin: 2px 0; }
   .copy { margin-top: 10px; padding: 9px 14px; border-radius: 4px; border: 1px solid var(--ink); background: #fff; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
   .ghost { width: 100%; margin-top: 12px; background: var(--ink); color: #fff; border: 0; border-radius: 4px; padding: 15px; font: inherit; font-weight: 700; cursor: pointer; }
@@ -342,6 +343,9 @@ const PRODUCTS = [
 
 /* ═══════════════════════════════════════════════════════════════ */
 
+// 은행 이름에 이 글자가 들어 있으면 글자 대신 로고를 보여줘요
+const BANK_LOGOS = { '하나': 'images/bank-hana.png' };
+
 const $ = id => document.getElementById(id);
 const won = n => n.toLocaleString('ko-KR') + '원';
 const state = { product: null, size: null, qty: 1, info: null };
@@ -513,7 +517,10 @@ function showDone(r) {
   const p = state.product, name = $('name').value.trim();
   $('shop').classList.add('hidden'); $('done').classList.remove('hidden');
   $('doneSub').textContent = r.smsSent ? '주문 내용과 입금 계좌를 문자로도 보내드렸어요.' : '이 화면을 캡처해 두시면 편해요.';
-  $('bankName').textContent = r.bank.bankName;
+  const logo = Object.keys(BANK_LOGOS).find(k => (r.bank.bankName || '').includes(k));
+  $('bankName').innerHTML = '';
+  if (logo) { const im = new Image(); im.src = BANK_LOGOS[logo]; im.alt = r.bank.bankName; im.className = 'banklogo'; $('bankName').appendChild(im); }
+  else $('bankName').textContent = r.bank.bankName;
   $('bankAcct').textContent = r.bank.account;
   $('bankHolder').textContent = '예금주 ' + r.bank.holder;
   $('doneTotal').textContent = won(r.total);
